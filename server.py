@@ -5,7 +5,6 @@ import numpy as np
 import base64
 from PIL import Image
 import io
-import mediapipe as mp
 import tensorflow as tf
 
 app = Flask(__name__)
@@ -14,8 +13,6 @@ def get_model():
     return tf.keras.models.load_model("model.h5")
 
 model = get_model()
-mpFaceMesh = mp.solutions.face_mesh
-faceMesh = mpFaceMesh.FaceMesh(max_num_faces=1)
 
 @app.route("/prediction", methods=['POST'])
 def get_prediction():
