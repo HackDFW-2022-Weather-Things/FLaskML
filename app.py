@@ -6,6 +6,9 @@ import base64
 from PIL import Image
 import io
 import json
+import uuid
+import calendar
+import time
 import tensorflow as tf
 import requests
 from distutils.command.config import config
@@ -23,7 +26,7 @@ def get_model():
     return tf.keras.models.load_model("modelBig.h5")
 
 
-def putDynamoDB():
+def putDynamoDB(longitude_x,latitude_y):
     my_config = Config(region_name = 'us-east-1')
     dynamodb = boto3.resource(
     'dynamodb',
@@ -33,16 +36,29 @@ def putDynamoDB():
 
     table = dynamodb.Table('express-app')
 
-    table.put_item(
+    GMT = time.gmtime()
+    keyUUID = uuid.uuid4()
+    uuidStr = str(keyUUID)
+
+    putID = uuidStr
+    putX = longitude_x
+    putY = latitude_y
+    putSeverity = 'severe'
+    putTimestamp = calendar.timegm(GMT) 
+
+    try:
+        response = table.put_item(
         Item={
-              'id': '8000',
-              'longitude_x': '32.7878937',
-              'latitude_y': '46.7996563',
-              'severity': 'calm',
-              'timestamp': '1664097931'
+              'id': putID,
+              'longitude_x': putX,
+              'latitude_y': putY,
+              'severity': putSeverity,
+              'timestamp': putTimestamp
         }
         )
-    return 0
+    except:
+        response =-1
+    return response
 
 model = get_model()
 model.summary()
@@ -68,8 +84,8 @@ def get_prediction():
         result = -1
     # Send result to express
     myobj = {'data': {"x": x, "y": y, "result": json.dumps(result.tolist())}}
-    #botoObj ={'Item':{"id": 0, "longitude_x": x, "latitude_y": y, "severity": 'severe', 'timestamp': 123232332 }}
-    putDynamoDB()
+   # Send results to DynamoDB
+    putDynamoDB(x,y)
     r = requests.post('http://54.161.43.254/publish', json = myobj)
 
     return {"blob": r.text}
