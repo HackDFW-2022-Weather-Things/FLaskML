@@ -13,6 +13,9 @@ def get_model():
     return tf.keras.models.load_model("model.h5")
 
 model = get_model()
+@app.route("/prediction", methods=['POST'])
+def test_connection():
+    return {"success": True}
 
 @app.route("/prediction", methods=['POST'])
 def get_prediction():

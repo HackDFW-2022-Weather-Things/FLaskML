@@ -1,2 +1,2 @@
 def predict(img, model):
-    return 0
+    model.predict(img)
