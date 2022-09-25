@@ -6,6 +6,7 @@ import base64
 from PIL import Image
 import io
 import tensorflow as tf
+import requests
 
 app = Flask(__name__)
 
@@ -20,6 +21,8 @@ def test_connection():
 @app.route("/prediction", methods=['POST'])
 def get_prediction():
     photo = request.get_json()['photo']
+    x = request.get_json()['x']
+    y = request.get_json()['y']
     imgdata = base64.b64decode(photo)
     img = Image.open(io.BytesIO(imgdata))
     img = np.array(img) 
@@ -29,7 +32,11 @@ def get_prediction():
         result = predict(img, model)
     except:
         result = -1
-    return {"Output": result}
+    # Send result to express
+    myobj = {'data': {"x": x, "y": y, "result": result}}
+    r = requests.post('http://54.161.43.254/publish', json = myobj)
+
+    return {"result": result, "blob": r.text}
 
 def run(server_class=HTTPServer, handler_class=SimpleHTTPRequestHandler):
     server_address = ('localhost', 8000)
